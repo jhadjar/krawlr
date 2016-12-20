@@ -13,7 +13,7 @@ USER_AGENT = 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:50.0) Gecko/20100101 Fire
 USER_AGENT_ = 'krawlr github.com/jhadjar/krawlr'
 
 RE_SITEMAP_ROBOTS = 'Sitemap: (.+)'
-RE_SITEMAP_LINKS = '<loc>(.*?)</loc>'
+RE_SITEMAP_LINKS = '<loc>(.+)</loc>'
 
 
 # TODO: Add a courtesy throttling mechanism.
