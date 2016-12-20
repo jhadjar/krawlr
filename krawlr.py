@@ -7,7 +7,7 @@ import requests
 __title__ = 'krawlr'
 __version__ = '1.0'
 __author__ = 'Jugurtha Hadjar'
-
+__copyright__ = 'Copyright 2016'
 
 USER_AGENT = 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:50.0) Gecko/20100101 Firefox/50.0'
 USER_AGENT_ = 'krawlr github.com/jhadjar/krawlr'
@@ -23,15 +23,15 @@ RE_SITEMAP_LINKS = '<loc>(.*?)</loc>'
 
 
 def fetch(url, retry=2, user_agent=USER_AGENT):
-	"""Fetch a `url` a maximum of `retries`."""
-
+	"""Fetch a `url` a maximum of `retry`."""
 	headers = {'User-Agent': user_agent}
-	r = requests.get(url, headers=headers)
-	if (200 != r.status_code) and retry > 0:
-		fetch(url, retry - 1)
-	else:
-		return r
-	
+	with requests.Session() as s:
+		r = s.get(url, headers=headers)
+		if (200 != r.status_code) and retry > 0:
+			fetch(url, retry - 1)
+		else:
+			return r
+
 
 def parser(pattern, target):
 	"""Yield a match for a pattern in a target file or URL."""
