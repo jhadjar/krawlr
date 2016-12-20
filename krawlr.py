@@ -32,7 +32,6 @@ def fetch(url, retry=2, user_agent=USER_AGENT):
 		else:
 			return r
 
-
 def parser(pattern, target):
 	"""Yield a match for a pattern in a target file or URL."""
 	try:
@@ -42,7 +41,6 @@ def parser(pattern, target):
 		data = fetch(target).text
 	for item in re.findall(pattern, data):
 		yield item
-
 
 def krawl(url):
 	for sm in parser(RE_SITEMAP_ROBOTS, url + '/robots.txt'):
