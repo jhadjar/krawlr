@@ -21,6 +21,10 @@ RE_SITEMAP_LINKS = '<loc>(.*?)</loc>'
 #		I'm not using the full power of requests but fear having
 #		to come back to it again if I go the urllib2 route.
 
+# QUESTION: Should I use Chunk-Encoded Requests to get a stream?
+#			I've seen sitemaps that are about 10MB. Is it better
+#			to receive and parse chunks for links instead of 
+#			downloading the whole thing and then parsing?
 
 def fetch(url, retry=2, user_agent=USER_AGENT):
 	"""Fetch a `url` a maximum of `retry`."""
