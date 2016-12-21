@@ -2,6 +2,8 @@
 	krawlr: the cute crawler.
 """
 import re
+import time
+
 import requests
 
 __title__ = 'krawlr'
@@ -13,7 +15,7 @@ USER_AGENT = 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:50.0) Gecko/20100101 Fire
 USER_AGENT_ = 'krawlr github.com/jhadjar/krawlr'
 
 RE_SITEMAP_ROBOTS = 'Sitemap: (.+)'
-RE_SITEMAP_LINKS = '<loc>(.+)</loc>'
+RE_SITEMAP_LINKS = '<loc>(.*?)</loc>'
 
 
 # TODO: Add a courtesy throttling mechanism.
@@ -26,28 +28,55 @@ RE_SITEMAP_LINKS = '<loc>(.+)</loc>'
 #			to receive and parse chunks for links instead of 
 #			downloading the whole thing and then parsing?
 
-def fetch(url, retry=2, user_agent=USER_AGENT):
-	"""Fetch a `url` a maximum of `retry`."""
-	headers = {'User-Agent': user_agent}
-	with requests.Session() as s:
-		r = s.get(url, headers=headers)
-		if (200 != r.status_code) and retry > 0:
-			fetch(url, retry - 1)
-		else:
-			return r
+def throttle(func, delay=1):
+	"""Throttle func by delay seconds"""
+	def wrapper(*args, **kwargs):
+		time.sleep(delay)
+		return func(*args, **kwargs)
+	return wrapper
 
-def parser(pattern, target):
-	"""Yield a match for a pattern in a target file or URL."""
+
+@throttle
+def fetch(url, user_agent=USER_AGENT):
+	"""Use session to fetch a url."""
+	headers = {'User-Agent': user_agent}
+
+	with requests.Session() as s:
+		try:
+			r = s.get(url, headers=headers)
+			yield r
+		except Exception as e:
+			print "{}".format(e)
+			yield None
+
+
+def readfile(filename):
+	"""Read a file line by line"""
 	try:
-		with open(target, 'r') as f:
-			data = f.read()
-	except (IOError, AttributeError) as e:
-		data = fetch(target).text
+		with open(filename) as f:
+			for line in f:
+				yield line
+	except IOError as e:
+		print "{}".format(e)
+
+def parse(pattern, data):
+	"""Parse data looking for pattern."""
 	for item in re.findall(pattern, data):
 		yield item
 
-def krawl(url):
-	for sm in parser(RE_SITEMAP_ROBOTS, url + '/robots.txt'):
-		for link in parser(RE_SITEMAP_LINKS, sm):
-			yield fetch(link)
-	 
+		
+def crawl_from_robots(url):
+	try:
+		robots = next(fetch(url + '/robots.txt')).text
+	except AttributeError:
+		print "The url does not have a robots.txt file"
+		return
+	sitemap_links = parse(RE_SITEMAP_ROBOTS, robots)
+
+	for sitemap_link in sitemap_links:
+		sitemap = next(fetch(sitemap_link)).text
+		links = parse(RE_SITEMAP_LINKS, sitemap)
+
+		for link in links:
+			resource = next(fetch(link))
+			print link, resource.status_code
