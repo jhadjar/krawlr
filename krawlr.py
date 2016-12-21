@@ -59,7 +59,7 @@ def readfile(filename):
 	except IOError as e:
 		print "{}".format(e)
 
-def parse(pattern, data):
+def parse(data, pattern):
 	"""Parse data looking for pattern."""
 	for item in re.findall(pattern, data):
 		yield item
@@ -71,11 +71,11 @@ def crawl_from_robots(url):
 	except AttributeError:
 		print "The url does not have a robots.txt file"
 		return
-	sitemap_links = parse(RE_SITEMAP_ROBOTS, robots)
+	sitemap_links = parse(robots, RE_SITEMAP_ROBOTS)
 
 	for sitemap_link in sitemap_links:
 		sitemap = next(fetch(sitemap_link)).text
-		links = parse(RE_SITEMAP_LINKS, sitemap)
+		links = parse(sitemap, RE_SITEMAP_LINKS)
 
 		for link in links:
 			resource = next(fetch(link))
