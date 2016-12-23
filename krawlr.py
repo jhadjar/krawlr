@@ -36,18 +36,24 @@ def throttle(func, delay=1):
 	return wrapper
 
 
+def use_session(func):
+	def wrapper(*args, **kwargs):
+		with requests.Session() as s:
+			pass			
+
+
 @throttle
 def fetch(url, user_agent=USER_AGENT):
 	"""Use session to fetch a url."""
 	headers = {'User-Agent': user_agent}
-
 	with requests.Session() as s:
 		try:
 			r = s.get(url, headers=headers)
+			r.raise_for_status()
 			yield r
 		except Exception as e:
 			print "{}".format(e)
-			yield None
+			yield r
 
 
 def readfile(filename):
@@ -58,6 +64,7 @@ def readfile(filename):
 				yield line
 	except IOError as e:
 		print "{}".format(e)
+
 
 def parse(data, pattern):
 	"""Parse data looking for pattern."""
@@ -74,9 +81,11 @@ def crawl_from_robots(url):
 	sitemap_links = parse(robots, RE_SITEMAP_ROBOTS)
 
 	for sitemap_link in sitemap_links:
+		print sitemap_link
 		sitemap = next(fetch(sitemap_link)).text
 		links = parse(sitemap, RE_SITEMAP_LINKS)
 
 		for link in links:
+			print link
 			resource = next(fetch(link))
 			print link, resource.status_code
